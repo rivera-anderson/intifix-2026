@@ -1,23 +1,25 @@
 package com.intifix.modules.audit.listener;
 
+import java.util.UUID;
+
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
 import com.intifix.modules.audit.entity.WebSocketAction;
 import com.intifix.modules.audit.entity.WebSocketLogDocument;
 import com.intifix.modules.audit.event.ChatMessageSentEvent;
+import com.intifix.modules.audit.event.ChatSessionEvent;
 import com.intifix.modules.audit.service.WebSocketLogService;
-import com.intifix.shared.security.AuthenticatedUser;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import com.intifix.shared.messaging.Eventos;
 
-import java.security.Principal;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 /**
- * Registra la actividad WebSocket en {@code websocket_logs}: ciclo de la sesión
- * STOMP (conexión/desconexión, eventos nativos de Spring) y envío de mensajes
- * (evento de dominio del chat, desacoplado).
+ * Registra la actividad del chat en {@code websocket_logs}.
+ *
+ * <p>El chat y su WebSocket ahora viven en chat-notif-service, que publica esta
+ * actividad por RabbitMQ. La auditoría sigue siendo del monolito: solo cambió
+ * de dónde llegan los eventos (antes, eventos internos de Spring).</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -25,17 +27,17 @@ public class WebSocketAuditListener {
 
     private final WebSocketLogService webSocketLogService;
 
-    @EventListener
-    public void onConnect(SessionConnectedEvent event) {
-        registrar(null, extraerUserId(event.getUser()), WebSocketAction.CONNECT);
+    @RabbitListener(queues = Eventos.Q_AUDIT_CHAT_CONECTADA)
+    public void onConnect(ChatSessionEvent event) {
+        registrar(null, event.userId(), WebSocketAction.CONNECT);
     }
 
-    @EventListener
-    public void onDisconnect(SessionDisconnectEvent event) {
-        registrar(null, extraerUserId(event.getUser()), WebSocketAction.DISCONNECT);
+    @RabbitListener(queues = Eventos.Q_AUDIT_CHAT_DESCONECTADA)
+    public void onDisconnect(ChatSessionEvent event) {
+        registrar(null, event.userId(), WebSocketAction.DISCONNECT);
     }
 
-    @EventListener
+    @RabbitListener(queues = Eventos.Q_AUDIT_CHAT_MENSAJE)
     public void onMessageSent(ChatMessageSentEvent event) {
         registrar(event.conversationId(), event.senderId(), WebSocketAction.MESSAGE_SENT);
     }
@@ -48,20 +50,5 @@ public class WebSocketAuditListener {
                 .action(action)
                 .build();
         webSocketLogService.registrar(log);
-    }
-
-    /** El principal STOMP es un {@link AuthenticatedUser} cuyo nombre es el UUID del usuario. */
-    private UUID extraerUserId(Principal principal) {
-        if (principal instanceof AuthenticatedUser usuario) {
-            return usuario.getId();
-        }
-        if (principal == null) {
-            return null;
-        }
-        try {
-            return UUID.fromString(principal.getName());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
     }
 }

@@ -58,6 +58,21 @@ spring:
         enabled: ${REDIS_SSL:true}
 
   # ===========================================================================
+  # RabbitMQ: eventos entre servicios (ver docs/eventos.md del monorepo).
+  # CloudAMQP da una URL amqps://usuario:clave@host/vhost
+  # ===========================================================================
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://guest:guest@localhost:5672}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2
+
+  # ===========================================================================
   # Correo (Gmail SMTP). Las credenciales se inyectan desde el .env / entorno.
   # MAIL_USERNAME = tu Gmail, MAIL_PASSWORD = "contraseña de aplicación" (no la
   # clave normal). Si MAIL_USERNAME queda vacío, el envío se omite (modo no-op).
@@ -90,6 +105,10 @@ spring:
           temperature: 0.3
 
 intifix:
+  # Clave compartida con los microservicios para la API interna /internal/v1/**.
+  # Sin valor, la API interna rechaza todas las llamadas.
+  internal:
+    api-key: ${INTERNAL_API_KEY:}
   cors:
     # En producción, inyectar INTIFIX_CORS_ALLOWED_ORIGINS como lista separada por coma:
     #   INTIFIX_CORS_ALLOWED_ORIGINS=https://intifix.vercel.app,https://intifix-admin.vercel.app
@@ -148,4 +167,7 @@ management:
     redis:
       enabled: false
     mongo:
+      enabled: false
+    # Si RabbitMQ cae, el monolito sigue sirviendo: no debe marcarse como caído.
+    rabbit:
       enabled: false

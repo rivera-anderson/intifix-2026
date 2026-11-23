@@ -68,7 +68,9 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/ws/**").permitAll()
+                // API interna entre servicios: no pasa por el gateway y exige X-Internal-Api-Key
+                // (lo valida InternalApiController). El chat y su WebSocket viven en chat-notif-service.
+                .requestMatchers("/internal/**").permitAll()
                 // Imágenes subidas (almacenamiento local) servidas públicamente.
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                 .anyRequest().authenticated()

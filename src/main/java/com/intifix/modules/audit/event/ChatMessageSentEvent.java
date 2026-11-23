@@ -3,7 +3,8 @@ package com.intifix.modules.audit.event;
 import java.util.UUID;
 
 /**
- * Se publica al enviarse un mensaje de chat. Lo consume audit para registrar
+ * Se publica al enviarse un mensaje de chat (desde chat-notif-service, por
+ * RabbitMQ). Lo consume audit para registrar
  * actividad WebSocket (websocket_logs).
  */
 public record ChatMessageSentEvent(
