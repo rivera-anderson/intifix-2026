@@ -1,4 +1,4 @@
-package com.intifix.modules.ai.dto;
+package com.intifix.modules.internal.dto;
 
 import com.intifix.modules.technicians.dto.response.TecnicoResponse;
 import com.intifix.modules.technicians.dto.response.ReputacionResponse;
@@ -7,7 +7,8 @@ import com.intifix.modules.technicians.enums.DisponibilidadTecnico;
 import java.math.BigDecimal;
 
 /**
- * DTO plano para el motor de IA.
+ * Técnico listo para el asistente de IA (ai-service), servido por la API
+ * interna de catálogo.
  *
  * urlPerfil viene pre-construida desde el backend para que GPT-4o nunca
  * tenga que extraer ni ensamblar un UUID: solo copia el valor de urlPerfil

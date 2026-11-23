@@ -93,17 +93,6 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
-  # ===========================================================================
-  # Spring AI - OpenAI GPT-4o. La API key se inyecta desde el .env / entorno.
-  # ===========================================================================
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o
-          temperature: 0.3
-
 intifix:
   # Clave compartida con los microservicios para la API interna /internal/v1/**.
   # Sin valor, la API interna rechaza todas las llamadas.
